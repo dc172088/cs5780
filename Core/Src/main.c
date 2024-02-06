@@ -92,16 +92,23 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  uint32_t debouncer = 0;
+  GPIOC->ODR |= GPIO_ODR_6;
+
   while (1)
   {
-    GPIOC->ODR |= GPIO_ODR_6;
-    HAL_Delay(100);
-    GPIOC->ODR &= 0;
-    HAL_Delay(100);
-    GPIOC->ODR |= GPIO_ODR_7;
-    HAL_Delay(100);
-    GPIOC->ODR &= 0;
-    HAL_Delay(100);
+    // Do bit shift
+    debouncer = debouncer << 1;
+    if (GPIOA->IDR & GPIO_IDR_0) {
+      debouncer |= 0x1;
+    }
+    // Only trigger once
+    if (debouncer == 0x7FFFFFFF) {
+      GPIOC->ODR ^= GPIO_ODR_6;
+      GPIOC->ODR ^= GPIO_ODR_7;
+    }
+    HAL_Delay(1);
+
   }
   /* USER CODE END 3 */
 }

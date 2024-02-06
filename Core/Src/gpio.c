@@ -13,8 +13,8 @@ void gpio_configure_pins() {
     // Clear GPIOA
     GPIOA->MODER &= 0;
 
-    // Set bit for general purpose output mode
-    GPIOA->MODER = 0x1U << GPIO_MODER_MODER0_Pos;
+    // Set bit for input mode
+    GPIOA->MODER = 0x0U << GPIO_MODER_MODER0_Pos;
     // Configure low speed
     GPIOA->OSPEEDR = 0x0U << GPIO_OSPEEDR_OSPEEDR0_Pos;
     // Configure pull down resistor
@@ -36,5 +36,5 @@ void gpio_configure_pins() {
 }
 
 int gpio_check_button() {
-    return GPIOC->IDR & 0x40UL;
+    return GPIOA->IDR & GPIO_IDR_0;
 }
