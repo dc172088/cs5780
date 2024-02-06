@@ -1,3 +1,2 @@
 ../Core/Src/gpio.c:4:6:gpio_init	1
 ../Core/Src/gpio.c:11:6:gpio_configure_pins	1
-../Core/Src/gpio.c:38:5:gpio_check_button	1

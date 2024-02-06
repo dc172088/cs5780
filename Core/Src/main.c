@@ -19,6 +19,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "gpio.h"
+#include "exti.h"
+#include "syscfg.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -88,27 +90,21 @@ int main(void)
 
   gpio_init();
   gpio_configure_pins();
+
+  exti_init();
+  exti_configure();
+
+  syscfg_init();
   /* USER CODE END 2 */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  uint32_t debouncer = 0;
-  GPIOC->ODR |= GPIO_ODR_6;
+  GPIOC->ODR |= GPIO_ODR_9;
 
   while (1)
   {
-    // Do bit shift
-    debouncer = debouncer << 1;
-    if (GPIOA->IDR & GPIO_IDR_0) {
-      debouncer |= 0x1;
-    }
-    // Only trigger once
-    if (debouncer == 0x7FFFFFFF) {
-      GPIOC->ODR ^= GPIO_ODR_6;
-      GPIOC->ODR ^= GPIO_ODR_7;
-    }
-    HAL_Delay(1);
-
+    GPIOC->ODR ^= GPIO_ODR_6;
+    HAL_Delay(600);
   }
   /* USER CODE END 3 */
 }

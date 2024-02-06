@@ -1,11 +1,16 @@
 #include "stm32f072xb.h"
 
+#ifndef _GPIO_H
+#define _GPIO_H
+
+/**
+ * @brief Initializes the GPIO peripheral
+*/
 void gpio_init();
 
-typedef void (*callback) (void);
-
+/**
+ * @brief Configures the GPIO pins to their desired mode
+*/
 void gpio_configure_pins();
 
-void gpio_delay();
-
-int gpio_check_button();
+#endif

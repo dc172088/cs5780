@@ -34,7 +34,3 @@ void gpio_configure_pins() {
     // No pullup or pulldown resistors
     GPIOC->PUPDR &= 0;
 }
-
-int gpio_check_button() {
-    return GPIOA->IDR & GPIO_IDR_0;
-}

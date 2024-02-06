@@ -25,7 +25,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_pwr.h \
  ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_pwr_ex.h \
  ../Core/Inc/gpio.h \
- ../Drivers/CMSIS/Device/ST/STM32F0xx/Include/stm32f072xb.h
+ ../Drivers/CMSIS/Device/ST/STM32F0xx/Include/stm32f072xb.h \
+ ../Core/Inc/exti.h ../Core/Inc/syscfg.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal.h:
 ../Core/Inc/stm32f0xx_hal_conf.h:
@@ -54,3 +55,5 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_pwr_ex.h:
 ../Core/Inc/gpio.h:
 ../Drivers/CMSIS/Device/ST/STM32F0xx/Include/stm32f072xb.h:
+../Core/Inc/exti.h:
+../Core/Inc/syscfg.h:
