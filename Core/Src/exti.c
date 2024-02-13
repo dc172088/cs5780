@@ -1,4 +1,5 @@
 #include "exti.h"
+
 #include "core_cm0.h"
 
 void exti_init() {
@@ -9,6 +10,7 @@ void exti_init() {
 }
 
 void exti_configure() {
+    // Button interrupt
     NVIC_EnableIRQ(EXTI0_1_IRQn);
     NVIC_SetPriority(EXTI0_1_IRQn, 1);
     NVIC_SetPriority(SysTick_IRQn, 0);
@@ -17,7 +19,8 @@ void exti_configure() {
 void EXTI0_1_IRQHandler() {
     // Toggle the orange and green LEDs
     GPIOC->ODR ^= GPIO_ODR_8;
-    for (volatile uint32_t i = 0; i < 1500000; i++) {}
+    for (volatile uint32_t i = 0; i < 1500000; i++) {
+    }
     GPIOC->ODR ^= GPIO_ODR_9;
 
     // Clear (acknowledge) interrupt for exti0

@@ -120,11 +120,6 @@ void PendSV_Handler(void) {
  */
 void SysTick_Handler(void) {
     /* USER CODE BEGIN SysTick_IRQn 0 */
-    static uint32_t count = 0;
-    count++;
-    if (count % 200 == 0) {
-        GPIOC->ODR ^= GPIO_ODR_7;
-    }
 
     /* USER CODE END SysTick_IRQn 0 */
     HAL_IncTick();

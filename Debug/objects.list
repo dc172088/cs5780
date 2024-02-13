@@ -1,3 +1,4 @@
+"./Core/Src/dtimer.o"
 "./Core/Src/exti.o"
 "./Core/Src/gpio.o"
 "./Core/Src/main.o"
