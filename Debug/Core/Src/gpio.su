@@ -1,2 +1,0 @@
-../Core/Src/gpio.c:4:6:gpio_init	8	static
-../Core/Src/gpio.c:9:6:gpio_configure_pins	8	static
