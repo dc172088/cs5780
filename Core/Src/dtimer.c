@@ -26,8 +26,8 @@ void timer_init() {
     TIM3->CCMR1 |= TIM_CCMR1_OC2PE;
 
     // Set capture/compare registers to 20% PWM
-    TIM3->CCR1 = (uint16_t)4;
-    TIM3->CCR2 = (uint16_t)4;
+    TIM3->CCR1 = (uint16_t)8;
+    TIM3->CCR2 = (uint16_t)8;
 
     // Enable output channels
     TIM3->CCER |= TIM_CCER_CC1E;

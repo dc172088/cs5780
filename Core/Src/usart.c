@@ -4,7 +4,7 @@
 
 void usart_init() {
     /* Enable USART pins in RCC */
-    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;     // Enable GPIOB
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;  // Enable GPIOB
     (void)RCC->AHBENR;
     RCC->APB1ENR |= RCC_APB1ENR_USART3EN;  // Enable USART3
     (void)RCC->APB1ENR;
@@ -16,11 +16,13 @@ void usart_init() {
     // Set bit for alternate function mode
     GPIOB->MODER |= GPIO_MODER_MODER10_1;  // PB10 - AF2
     GPIOB->MODER |= GPIO_MODER_MODER11_1;  // PB11 - AF0
-    GPIOB->ODR |= GPIO_ODR_11;
 
     // Configure alternate function
-    GPIOB->AFR[1] &= ~(0xDUL << GPIO_AFRH_AFSEL10_Pos);  // AF2
-    GPIOB->AFR[1] &= ~GPIO_AFRH_AFSEL11;                 // AF0
+    GPIOB->AFR[1] &= ~GPIO_AFRH_AFSEL10;              // AF2
+    GPIOB->AFR[1] |= 0x4UL << GPIO_AFRH_AFSEL10_Pos;  // AF2
+
+    GPIOB->AFR[1] &= ~GPIO_AFRH_AFSEL11;              // AF0
+    GPIOB->AFR[1] |= 0x4UL << GPIO_AFRH_AFSEL11_Pos;  // AF0
 
     // Configure GPIO modes
     // Pullup on receive line
@@ -40,6 +42,7 @@ void usart_init() {
 void usart_write_byte(uint8_t byte) {
     // Wait for register to become available to write into
     while (!(USART3->ISR & USART_ISR_TXE)) {
+        asm("nop");
     }
 
     // Write data into transmit register
