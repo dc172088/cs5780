@@ -40,14 +40,35 @@ int main(void) {
     gpio_configure_pins();
 
     usart_init();
-    
-    // Initially set colors of LEDs
-    GPIOC->ODR |= GPIO_ODR_9;  // Green
 
+    // Initially set colors of LEDs
     while (1) {
-        usart_write_byte('a');
-        HAL_Delay(100);
-        GPIOC->ODR ^= GPIO_ODR_9;
+        switch (usart_read_byte()) {
+            // Red case
+            case 'r': {
+                GPIOC->ODR ^= GPIO_ODR_6;
+                break;
+            }
+            // Blue case
+            case 'b': {
+                GPIOC->ODR ^= GPIO_ODR_7;
+                break;
+            }
+            // Orange case
+            case 'o': {
+                GPIOC->ODR ^= GPIO_ODR_8;
+                break;
+            }
+            // Green case
+            case 'g': {
+                GPIOC->ODR ^= GPIO_ODR_9;
+                break;
+            }
+
+            default:
+                usart_write_string("invalid letter\n\r");
+                break;
+        }
     }
 }
 

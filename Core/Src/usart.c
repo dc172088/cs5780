@@ -46,8 +46,24 @@ void usart_write_byte(uint8_t byte) {
     }
 
     // Write data into transmit register
-    USART3->TDR = (uint8_t)byte;
+    USART3->TDR = byte;
+}
+
+uint8_t usart_read_byte() {
+    // Wait for register to have data to read
+    while (!(USART3->ISR & USART_ISR_RXNE)) {
+        asm("nop");
+    }
+
+    // Read data from register
+    return USART3->RDR;
 }
 
 void usart_write_string(const char* const str) {
+    for (uint8_t i = 0; i < UINT8_MAX; i++) {
+        if (str[i] == 0) {
+            break;
+        }
+        usart_write_byte(str[i]);
+    }
 }

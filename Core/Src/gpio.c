@@ -24,7 +24,7 @@ void gpio_configure_pins() {
     // Configure PC6 PC7 PC8 and PC9
     
     // Set bit for general purpose output mode
-    GPIOC->MODER |= (0x1U << GPIO_MODER_MODER8_Pos) | (0x1U << GPIO_MODER_MODER9_Pos);
+    GPIOC->MODER |= (0x1U << GPIO_MODER_MODER8_Pos) | (0x1U << GPIO_MODER_MODER9_Pos) | (0x1U << GPIO_MODER_MODER6_Pos) | (0x1U << GPIO_MODER_MODER7_Pos);
 
     // Configure push-pull output type
     GPIOC->OTYPER &= 0;

@@ -17,8 +17,16 @@ void usart_init();
 void usart_write_byte(uint8_t byte);
 
 /**
+ * @brief Reads a byte from USART
+ * @note BLOCKING
+ * @return the byte read
+*/
+uint8_t usart_read_byte();
+
+/**
  * @brief Helper method for writing a string to USART
  * @note BLOCKING
+ * @note strings are limited to 256 bytes
  * @param str the string to write
 */
 void usart_write_string(const char* const str);
