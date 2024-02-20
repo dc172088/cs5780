@@ -24,10 +24,6 @@ void usart_init() {
     GPIOB->AFR[1] &= ~GPIO_AFRH_AFSEL11;              // AF0
     GPIOB->AFR[1] |= 0x4UL << GPIO_AFRH_AFSEL11_Pos;  // AF0
 
-    // Configure GPIO modes
-    // Pullup on receive line
-    // GPIOB->PUPDR |= GPIO_PUPDR_PUPDR11_0;
-
     /* Configure USART peripheral */
     // Compute baud rate register from baud = f_CK / USARTDIV
     uint32_t freq = HAL_RCC_GetHCLKFreq();

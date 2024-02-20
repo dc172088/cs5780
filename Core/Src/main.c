@@ -41,7 +41,6 @@ int main(void) {
 
     usart_init();
 
-    // Initially set colors of LEDs
     while (1) {
         switch (usart_read_byte()) {
             // Red case
