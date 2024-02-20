@@ -23,6 +23,10 @@
 #include "gpio.h"
 #include "usart.h"
 
+// Declare globals in usart.c
+extern uint8_t usart_command[2];
+extern uint8_t usart_status;
+
 void SystemClock_Config(void);
 
 /**
@@ -41,34 +45,78 @@ int main(void) {
 
     usart_init();
 
+    usart_write_string("Begin by entering a command:\n\r");
     while (1) {
-        switch (usart_read_byte()) {
-            // Red case
-            case 'r': {
-                GPIOC->ODR ^= GPIO_ODR_6;
-                break;
-            }
-            // Blue case
-            case 'b': {
-                GPIOC->ODR ^= GPIO_ODR_7;
-                break;
-            }
-            // Orange case
-            case 'o': {
-                GPIOC->ODR ^= GPIO_ODR_8;
-                break;
-            }
-            // Green case
-            case 'g': {
-                GPIOC->ODR ^= GPIO_ODR_9;
-                break;
-            }
+        // Handle when a command is received
+        if (usart_status >= 2) {
+            uint8_t color = usart_command[0];
+            uint8_t command = usart_command[1];
+            switch (color) {
+                // Red case
+                case 'r': {
+                    if (gpio_process_pin(GPIOC, GPIO_ODR_6, command)) {
+                        usart_write_string("red\n\r\n\r");
+                    }
+                    break;
+                }
+                // Blue case
+                case 'b': {
+                    if (gpio_process_pin(GPIOC, GPIO_ODR_7, command)) {
+                        usart_write_string("blue\n\r\n\r");
+                    }
+                    break;
+                }
+                // Orange case
+                case 'o': {
+                    if (gpio_process_pin(GPIOC, GPIO_ODR_8, command)) {
+                        usart_write_string("orange\n\r\n\r");
+                    }
+                    break;
+                }
+                // Green case
+                case 'g': {
+                    if (gpio_process_pin(GPIOC, GPIO_ODR_9, command)) {
+                        usart_write_string("green\n\r\n\r");
+                    }
+                    break;
+                }
 
-            default:
-                usart_write_string("invalid letter\n\r");
-                break;
+                default:
+                    usart_write_string("invalid letter\n\r\n\r");
+                    break;
+            }
+            usart_status = 0;
+            usart_write_string("Enter a command:\n\r");
         }
     }
+}
+
+uint8_t gpio_process_pin(GPIO_TypeDef* gpio, uint32_t pin, uint8_t state) {
+    switch (state) {
+        // Clear state, turn LED off
+        case '0': {
+            gpio->ODR &= ~pin;
+            usart_write_string("turned off: ");
+            break;
+        }
+        // Set state, turn LED on
+        case '1': {
+            gpio->ODR |= pin;
+            usart_write_string("turned on: ");
+            break;
+        }
+        // Toggle state, toggle LED
+        case '2': {
+            usart_write_string("toggled: ");
+            gpio->ODR ^= pin;
+            break;
+        }
+
+        default:
+            usart_write_string("invalid pin state character\n\r\n\r");
+            return 0;
+    }
+    return 1;
 }
 
 /**
@@ -127,7 +175,7 @@ void Error_Handler(void) {
  * @param  line: assert_param error line source number
  * @retval None
  */
-void assert_failed(uint8_t *file, uint32_t line) {
+void assert_failed(uint8_t* file, uint32_t line) {
     /* USER CODE BEGIN 6 */
     /* User can add his own implementation to report the file name and line number,
        ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
