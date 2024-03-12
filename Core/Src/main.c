@@ -22,6 +22,7 @@
 #include "dtimer.h"
 #include "gpio.h"
 #include "usart.h"
+#include "i2c.h"
 
 // Declare globals in usart.c
 extern uint8_t usart_command[2];
@@ -43,80 +44,17 @@ int main(void) {
     gpio_init();
     gpio_configure_pins();
 
-    usart_init();
+    i2c_init();
+    i2c_gpio_init();
 
-    usart_write_string("Begin by entering a command:\n\r");
+    // Perform write to address
+    static uint8_t who_am_i_register = 0x0F;
+    i2c_write(&who_am_i_register, 1, 0x69);
+    // i2c_write(&who_am_i_register, 1, 0x6B);
+
     while (1) {
-        // Handle when a command is received
-        if (usart_status >= 2) {
-            uint8_t color = usart_command[0];
-            uint8_t command = usart_command[1];
-            switch (color) {
-                // Red case
-                case 'r': {
-                    if (gpio_process_pin(GPIOC, GPIO_ODR_6, command)) {
-                        usart_write_string("red\n\r\n\r");
-                    }
-                    break;
-                }
-                // Blue case
-                case 'b': {
-                    if (gpio_process_pin(GPIOC, GPIO_ODR_7, command)) {
-                        usart_write_string("blue\n\r\n\r");
-                    }
-                    break;
-                }
-                // Orange case
-                case 'o': {
-                    if (gpio_process_pin(GPIOC, GPIO_ODR_8, command)) {
-                        usart_write_string("orange\n\r\n\r");
-                    }
-                    break;
-                }
-                // Green case
-                case 'g': {
-                    if (gpio_process_pin(GPIOC, GPIO_ODR_9, command)) {
-                        usart_write_string("green\n\r\n\r");
-                    }
-                    break;
-                }
-
-                default:
-                    usart_write_string("invalid letter\n\r\n\r");
-                    break;
-            }
-            usart_status = 0;
-            usart_write_string("Enter a command:\n\r");
-        }
+       
     }
-}
-
-uint8_t gpio_process_pin(GPIO_TypeDef* gpio, uint32_t pin, uint8_t state) {
-    switch (state) {
-        // Clear state, turn LED off
-        case '0': {
-            gpio->ODR &= ~pin;
-            usart_write_string("turned off: ");
-            break;
-        }
-        // Set state, turn LED on
-        case '1': {
-            gpio->ODR |= pin;
-            usart_write_string("turned on: ");
-            break;
-        }
-        // Toggle state, toggle LED
-        case '2': {
-            usart_write_string("toggled: ");
-            gpio->ODR ^= pin;
-            break;
-        }
-
-        default:
-            usart_write_string("invalid pin state character\n\r\n\r");
-            return 0;
-    }
-    return 1;
 }
 
 /**

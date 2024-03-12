@@ -5,7 +5,7 @@ void i2c_init() {
     RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
 
     // Configure I2C2 to be 100KHz
-    I2C2->TIMINGR |= I2C_TIMINGR_PRESC;              // Set prescaler bit
+    I2C2->TIMINGR |= 0x1 << I2C_TIMINGR_PRESC_Pos;   // Set prescaler bit
     I2C2->TIMINGR |= 0x13 << I2C_TIMINGR_SCLL_Pos;   // Set SCLL value
     I2C2->TIMINGR |= 0xF << I2C_TIMINGR_SCLH_Pos;    // Set SCLH value
     I2C2->TIMINGR |= 0x2 << I2C_TIMINGR_SDADEL_Pos;  // Set SDADEL value
@@ -31,12 +31,12 @@ void i2c_gpio_init() {
     GPIOB->OTYPER |= GPIO_OTYPER_OT_11 || GPIO_OTYPER_OT_13;
 
     // Configure alternate function
-    GPIOB->AFR[1] &= ~GPIO_AFRH_AFSEL10;              // AF2
-    GPIOB->AFR[1] |= 0x4UL << GPIO_AFRH_AFSEL10_Pos;  // AF2
+    GPIOB->AFR[1] |= 0x1UL << GPIO_AFRH_AFSEL11_Pos;  // AF1
+    GPIOB->AFR[1] |= 0x5UL << GPIO_AFRH_AFSEL13_Pos;  // AF5
 
     // Configure internal pull-up resistors
-    GPIOB->PUPDR |= GPIO_PUPDR_PUPDR11_0;
-    GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_0;
+    // GPIOB->PUPDR |= GPIO_PUPDR_PUPDR11_0;
+    // GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_0;
 
     /* Configure PB14 */
     // Set bit for output mode
@@ -57,4 +57,38 @@ void i2c_gpio_init() {
 
     // Initialize value to 1
     GPIOC->ODR |= GPIO_ODR_0;
+}
+
+void i2c_write(uint8_t* buffer, uint8_t num_bytes, uint8_t address) {
+    // Set I2C address
+    I2C2->CR2 &= ~I2C_CR2_SADD;                     // Clear I2C address
+    I2C2->CR2 |= address << I2C_CR2_SADD_Pos << 1;  // IMPORTANT: bit shift by 1 for 7-bit addresses
+
+    // Indicate number of bytes to write
+    I2C2->CR2 &= ~I2C_CR2_NBYTES;                  // First clear out old data
+    I2C2->CR2 |= num_bytes << I2C_CR2_NBYTES_Pos;  // Write number of bytes
+
+    // Indicate Write Operation
+    I2C2->CR2 &= ~I2C_CR2_RD_WRN;
+
+    // Indicate to not use AUTOEND
+    I2C2->CR2 &= ~I2C_CR2_AUTOEND;
+
+    // Set start bit to begin transfer
+    I2C2->CR2 |= I2C_CR2_START;
+
+    // Wait for transmit ready bit
+    while (!I2C2->ISR & I2C_ISR_TXIS) {
+    }
+
+    // Check for ACK
+    if (I2C2->ISR & I2C_ISR_NACKF) {
+        return;
+    }
+
+    // Send data
+    I2C2->TXDR = *buffer;
+
+    while (!I2C2->ISR & I2C_ISR_TC) {
+    }
 }

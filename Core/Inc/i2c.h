@@ -14,8 +14,8 @@ void i2c_init();
 void i2c_gpio_init();
 
 /**
- * @brief Configures the GPIO pins to their desired mode
+ * @brief Perform a blocking I2C read
 */
-void gpio_configure_pins();
+void i2c_write(uint8_t* buffer, uint8_t num_bytes, uint8_t address);
 
 #endif
