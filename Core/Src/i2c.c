@@ -59,7 +59,7 @@ void i2c_gpio_init() {
     GPIOC->ODR |= GPIO_ODR_0;
 }
 
-void i2c_write(uint8_t* buffer, uint8_t num_bytes, uint8_t address) {
+uint8_t i2c_write(uint8_t* buffer, uint8_t num_bytes, uint8_t address) {
     // Set I2C address
     I2C2->CR2 &= ~I2C_CR2_SADD;                     // Clear I2C address
     I2C2->CR2 |= address << I2C_CR2_SADD_Pos << 1;  // IMPORTANT: bit shift by 1 for 7-bit addresses
@@ -78,17 +78,65 @@ void i2c_write(uint8_t* buffer, uint8_t num_bytes, uint8_t address) {
     I2C2->CR2 |= I2C_CR2_START;
 
     // Wait for transmit ready bit
-    while (!I2C2->ISR & I2C_ISR_TXIS) {
+    while (!(I2C2->ISR & I2C_ISR_TXIS)) {
     }
 
     // Check for ACK
     if (I2C2->ISR & I2C_ISR_NACKF) {
-        return;
+        return 0;
     }
 
-    // Send data
-    I2C2->TXDR = *buffer;
+    // Loop to send data
+    for (uint8_t i = 0; i < num_bytes; i++) {
+        // Send byte at a time
+        I2C2->TXDR = buffer[i];
 
-    while (!I2C2->ISR & I2C_ISR_TC) {
+        // Wait for transmission
+        while (!(I2C2->ISR & I2C_ISR_TC)) {
+        }
     }
+    return 1;
+}
+
+uint8_t i2c_read(uint8_t* buffer, uint8_t num_bytes, uint8_t address) {
+    // Set I2C address
+    I2C2->CR2 &= ~I2C_CR2_SADD;                     // Clear I2C address
+    I2C2->CR2 |= address << I2C_CR2_SADD_Pos << 1;  // IMPORTANT: bit shift by 1 for 7-bit addresses
+
+    // Indicate number of bytes to write
+    I2C2->CR2 &= ~I2C_CR2_NBYTES;                  // First clear out old data
+    I2C2->CR2 |= num_bytes << I2C_CR2_NBYTES_Pos;  // Read number of bytes
+
+    // Indicate Read Operation
+    I2C2->CR2 |= I2C_CR2_RD_WRN;
+
+    // Indicate to not use AUTOEND
+    I2C2->CR2 &= ~I2C_CR2_AUTOEND;
+
+    // Set start bit to begin transfer
+    I2C2->CR2 |= I2C_CR2_START;
+
+    // Wait for receive ready bit
+    while (!(I2C2->ISR & I2C_ISR_RXNE)) {
+    }
+
+    // Check for ACK
+    if (I2C2->ISR & I2C_ISR_NACKF) {
+        return 0;
+    }
+
+    // Loop to send data
+    for (uint8_t i = 0; i < num_bytes; i++) {
+        // Wait for transmission
+        while (!(I2C2->ISR & I2C_ISR_TC)) {
+        }
+
+        // Receive one byte at a time
+        buffer[i] = I2C2->RXDR;
+    }
+    return 1;
+}
+
+void i2c_stop() {
+    I2C2->CR2 |= I2C_CR2_STOP;
 }

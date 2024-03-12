@@ -24,11 +24,11 @@
 #include "usart.h"
 #include "i2c.h"
 
-// Declare globals in usart.c
-extern uint8_t usart_command[2];
-extern uint8_t usart_status;
 
 void SystemClock_Config(void);
+
+// Declare the MEMS I2C Address
+const uint8_t mems_i2c_address = 0x69;
 
 /**
  * @brief  The application entry point.
@@ -47,10 +47,23 @@ int main(void) {
     i2c_init();
     i2c_gpio_init();
 
-    // Perform write to address
+    // Perform write to who am i register
     static uint8_t who_am_i_register = 0x0F;
-    i2c_write(&who_am_i_register, 1, 0x69);
-    // i2c_write(&who_am_i_register, 1, 0x6B);
+    i2c_write(&who_am_i_register, 1, mems_i2c_address);
+
+    // Perform read from who am i register
+    static uint8_t who_am_i_value = 0;
+    i2c_read(&who_am_i_value, 1, mems_i2c_address);
+    
+    // Send stop command
+    i2c_stop();
+
+    // Verify that we received correct value
+    if (who_am_i_value == 0xd3) {
+        GPIOC->ODR |= GPIO_ODR_9; // Green for success!
+    } else {
+        GPIOC->ODR |= GPIO_ODR_6; // Red for failure :(
+    }
 
     while (1) {
        
