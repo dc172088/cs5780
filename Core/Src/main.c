@@ -21,13 +21,23 @@
 
 #include "dtimer.h"
 #include "gpio.h"
+#include "i2c.h"
 #include "usart.h"
 
-// Declare globals in usart.c
-extern uint8_t usart_command[2];
-extern uint8_t usart_status;
-
 void SystemClock_Config(void);
+
+// Declare the MEMS I2C Address
+const uint8_t mems_i2c_address = 0x69;
+
+/**
+ * @brief Macro for building an int16_t from two bytes
+ */
+#define ASSEMBLE_INT16(LOW, HIGH) ((int16_t)LOW | (((int16_t)HIGH) << 8))
+
+/**
+ * @brief Macro for thresholds for triggering the LEDs
+ */
+#define LED_THRESHOLD (1000)
 
 /**
  * @brief  The application entry point.
@@ -43,80 +53,80 @@ int main(void) {
     gpio_init();
     gpio_configure_pins();
 
-    usart_init();
+    i2c_init();
+    i2c_gpio_init();
 
-    usart_write_string("Begin by entering a command:\n\r");
+    // Perform write to who am i register
+    // static uint8_t who_am_i_register = 0x0F;
+    // i2c_write(&who_am_i_register, 1, mems_i2c_address);
+
+    // // Perform read from who am i register
+    // static uint8_t who_am_i_value = 0;
+    // i2c_read(&who_am_i_value, 1, mems_i2c_address);
+
+    // // Send stop command
+    // i2c_stop();
+
+    // Verify that we received correct value
+    // if (who_am_i_value == 0xd3) {
+    //     GPIOC->ODR |= GPIO_ODR_9; // Green for success!
+    // } else {
+    //     GPIOC->ODR |= GPIO_ODR_6; // Red for failure :(
+    // }
+
+    // Initialize sensor
+    const uint8_t control_reg1_address = 0x20;
+    static uint8_t init_sensor_data[] = {I2C_ENABLE_MULTIPLE_BYTES(control_reg1_address), 0b01001111};
+    i2c_write(init_sensor_data, 2, mems_i2c_address);
+    i2c_stop();
+
     while (1) {
-        // Handle when a command is received
-        if (usart_status >= 2) {
-            uint8_t color = usart_command[0];
-            uint8_t command = usart_command[1];
-            switch (color) {
-                // Red case
-                case 'r': {
-                    if (gpio_process_pin(GPIOC, GPIO_ODR_6, command)) {
-                        usart_write_string("red\n\r\n\r");
-                    }
-                    break;
-                }
-                // Blue case
-                case 'b': {
-                    if (gpio_process_pin(GPIOC, GPIO_ODR_7, command)) {
-                        usart_write_string("blue\n\r\n\r");
-                    }
-                    break;
-                }
-                // Orange case
-                case 'o': {
-                    if (gpio_process_pin(GPIOC, GPIO_ODR_8, command)) {
-                        usart_write_string("orange\n\r\n\r");
-                    }
-                    break;
-                }
-                // Green case
-                case 'g': {
-                    if (gpio_process_pin(GPIOC, GPIO_ODR_9, command)) {
-                        usart_write_string("green\n\r\n\r");
-                    }
-                    break;
-                }
+        // Delay updates
+        HAL_Delay(100);
 
-                default:
-                    usart_write_string("invalid letter\n\r\n\r");
-                    break;
-            }
-            usart_status = 0;
-            usart_write_string("Enter a command:\n\r");
+        // Setup write
+        const uint8_t base_angle_address = 0x28;
+        static uint8_t base_angle_data[] = {I2C_ENABLE_MULTIPLE_BYTES(base_angle_address)};
+        i2c_write(base_angle_data, 1, mems_i2c_address);
+
+        // Setup multi-byte read
+        static uint8_t angle_data[6];
+        i2c_read(angle_data, 6, mems_i2c_address);
+        i2c_stop();
+
+        // Parse data
+        int16_t x_angle = ASSEMBLE_INT16(angle_data[0], angle_data[1]);
+        int16_t y_angle = ASSEMBLE_INT16(angle_data[2], angle_data[3]);
+        // int16_t z_angle = ASSEMBLE_INT16(angle_data[4], angle_data[5]);
+
+        static int32_t x_total = 0;
+        static int32_t y_total = 0;
+
+        x_total = x_angle;
+        y_total = y_angle;
+        // static int16_t za = 0;
+
+        // Trigger LEDs Based on Orientation
+        if (x_total > LED_THRESHOLD) {
+            GPIOC->ODR |= GPIO_ODR_9;  // Green
+            GPIOC->ODR &= ~GPIO_ODR_8;
+
+        } else if (x_total < -LED_THRESHOLD) {
+            GPIOC->ODR |= GPIO_ODR_8;  // Orange
+            GPIOC->ODR &= ~GPIO_ODR_9;
+        } else {
+            GPIOC->ODR &= ~(GPIO_ODR_8 | GPIO_ODR_9);  // Not green or orange
+        }
+        if (y_total > LED_THRESHOLD) {
+            GPIOC->ODR |= GPIO_ODR_6;  // Red
+            GPIOC->ODR &= ~GPIO_ODR_7;
+        } else if (y_total < -LED_THRESHOLD) {
+            GPIOC->ODR |= GPIO_ODR_7;  // Blue
+            GPIOC->ODR &= ~GPIO_ODR_6;
+        } else {
+            GPIOC->ODR &= ~(GPIO_ODR_6 | GPIO_ODR_7);  // Not red or blue
         }
     }
-}
-
-uint8_t gpio_process_pin(GPIO_TypeDef* gpio, uint32_t pin, uint8_t state) {
-    switch (state) {
-        // Clear state, turn LED off
-        case '0': {
-            gpio->ODR &= ~pin;
-            usart_write_string("turned off: ");
-            break;
-        }
-        // Set state, turn LED on
-        case '1': {
-            gpio->ODR |= pin;
-            usart_write_string("turned on: ");
-            break;
-        }
-        // Toggle state, toggle LED
-        case '2': {
-            usart_write_string("toggled: ");
-            gpio->ODR ^= pin;
-            break;
-        }
-
-        default:
-            usart_write_string("invalid pin state character\n\r\n\r");
-            return 0;
-    }
-    return 1;
 }
 
 /**
