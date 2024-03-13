@@ -40,4 +40,10 @@ uint8_t i2c_read(uint8_t* buffer, uint8_t num_bytes, uint8_t address);
 */
 void i2c_stop();
 
+/**
+ * @brief Macro for setting most significant bit to enable
+ * multiple byte transactions for specific devices
+*/
+#define I2C_ENABLE_MULTIPLE_BYTES(ADDRESS) (ADDRESS | 128)
+
 #endif

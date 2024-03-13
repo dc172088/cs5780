@@ -35,8 +35,8 @@ void i2c_gpio_init() {
     GPIOB->AFR[1] |= 0x5UL << GPIO_AFRH_AFSEL13_Pos;  // AF5
 
     // Configure internal pull-up resistors
-    // GPIOB->PUPDR |= GPIO_PUPDR_PUPDR11_0;
-    // GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_0;
+    GPIOB->PUPDR |= GPIO_PUPDR_PUPDR11_0;
+    GPIOB->PUPDR |= GPIO_PUPDR_PUPDR13_0;
 
     /* Configure PB14 */
     // Set bit for output mode
@@ -91,9 +91,13 @@ uint8_t i2c_write(uint8_t* buffer, uint8_t num_bytes, uint8_t address) {
         // Send byte at a time
         I2C2->TXDR = buffer[i];
 
-        // Wait for transmission
-        while (!(I2C2->ISR & I2C_ISR_TC)) {
+        // Wait for register to be transferred
+        while (!(I2C2->ISR & I2C_ISR_TXE)) {
         }
+    }
+
+    // Wait for transmission
+    while (!(I2C2->ISR & I2C_ISR_TC)) {
     }
     return 1;
 }
@@ -103,7 +107,7 @@ uint8_t i2c_read(uint8_t* buffer, uint8_t num_bytes, uint8_t address) {
     I2C2->CR2 &= ~I2C_CR2_SADD;                     // Clear I2C address
     I2C2->CR2 |= address << I2C_CR2_SADD_Pos << 1;  // IMPORTANT: bit shift by 1 for 7-bit addresses
 
-    // Indicate number of bytes to write
+    // Indicate number of bytes to read
     I2C2->CR2 &= ~I2C_CR2_NBYTES;                  // First clear out old data
     I2C2->CR2 |= num_bytes << I2C_CR2_NBYTES_Pos;  // Read number of bytes
 
@@ -127,12 +131,16 @@ uint8_t i2c_read(uint8_t* buffer, uint8_t num_bytes, uint8_t address) {
 
     // Loop to send data
     for (uint8_t i = 0; i < num_bytes; i++) {
-        // Wait for transmission
-        while (!(I2C2->ISR & I2C_ISR_TC)) {
+        // Wait to receive data
+        while (!(I2C2->ISR & I2C_ISR_RXNE)) {
         }
 
         // Receive one byte at a time
         buffer[i] = I2C2->RXDR;
+    }
+
+    // Wait for transmission
+    while (!(I2C2->ISR & I2C_ISR_TC)) {
     }
     return 1;
 }
