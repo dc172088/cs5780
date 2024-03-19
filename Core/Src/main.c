@@ -24,6 +24,7 @@
 #include "i2c.h"
 #include "usart.h"
 #include "adc.h"
+#include "dac.h"
 
 void SystemClock_Config(void);
 
@@ -41,37 +42,14 @@ int main(void) {
     gpio_init();
     gpio_configure_pins();
 
-    adc_init();
+    dac_init();
 
     while (1) {
-        // Read from ADC
-        uint8_t input = (uint8_t)adc_read();
+        // Write to DAC
+        dac_write();
 
-        // Turn on LEDs based on input read
-        // Red
-        if (input > 32) {
-            GPIOC->ODR |= GPIO_ODR_6; 
-        } else {
-            GPIOC->ODR &= ~GPIO_ODR_6;
-        }
-        // Orange
-        if (input > 96) {
-            GPIOC->ODR |= GPIO_ODR_8; 
-        } else {
-            GPIOC->ODR &= ~GPIO_ODR_8;
-        }
-        // Blue
-        if (input > 160) {
-            GPIOC->ODR |= GPIO_ODR_7; 
-        } else {
-            GPIOC->ODR &= ~GPIO_ODR_7;
-        }
-        // Green
-        if (input > 224) {
-            GPIOC->ODR |= GPIO_ODR_9; 
-        } else {
-            GPIOC->ODR &= ~GPIO_ODR_9;
-        }
+        // Delay by 1ms
+        HAL_Delay(1);
     }
 }
 

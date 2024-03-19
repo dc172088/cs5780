@@ -6,7 +6,7 @@ void adc_init() {
     // Enable clock to C GPIO bus
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
 
-    // Set PB0 to analog mode
+    // Set PC3 to analog mode
     GPIOC->MODER |= GPIO_MODER_MODER3;
 
     // No pullup or pulldown resistors
